@@ -2,29 +2,29 @@
 
 namespace App\Filament\Auth\Pages;
 
-use App\Filament\Resources\Enums\UserRole;
-use App\Models\Office;
-use App\Models\Section;
 use App\Models\User;
-use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use App\Models\Office;
+use App\Enums\UserRole;
+use App\Models\Section;
+use Filament\Forms\Form;
 use Filament\Actions\Action;
-use Filament\Events\Auth\Registered;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\FileUpload;
+use Filament\Pages\Auth\Register;
+use Illuminate\Support\HtmlString;
+use Filament\Events\Auth\Registered;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Wizard;
-use Filament\Forms\Components\Wizard\Step;
-use Filament\Forms\Form;
-use Filament\Http\Responses\Auth\RegistrationResponse;
-use Filament\Notifications\Auth\VerifyEmail;
-use Filament\Notifications\Notification;
-use Filament\Pages\Auth\Register;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Component;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Wizard\Step;
+use Filament\Notifications\Auth\VerifyEmail;
+use Filament\Http\Responses\Auth\RegistrationResponse;
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 
 class Registration extends Register
 {
