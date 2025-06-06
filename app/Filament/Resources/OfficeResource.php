@@ -23,7 +23,15 @@ class OfficeResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->role === UserRole::ROOT;
+        $user = Auth::user();
+        
+        // ROOT users can see all offices
+        if ($user?->role === UserRole::ROOT) {
+            return true;
+        }
+        
+        // Administrator users can only see their own office
+        return $user?->role === UserRole::ADMINISTRATOR && $user->office_id !== null;
     }
 
     public static function form(Form $form): Form
@@ -55,7 +63,18 @@ class OfficeResource extends Resource
                 Tables\Filters\TrashedFilter::make('trashed'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(function (Office $record) {
+                        $user = Auth::user();
+                        
+                        // ROOT users can edit any office
+                        if ($user?->role === UserRole::ROOT) {
+                            return true;
+                        }
+                        
+                        // ADMINISTRATOR users can only edit their own office
+                        return $user?->role === UserRole::ADMINISTRATOR && $user->office_id === $record->id;
+                    }),
             ]);
     }
 
@@ -77,10 +96,19 @@ class OfficeResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withCount('users')
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        $user = Auth::user();
+        
+        // If user is an Administrator, only show their office
+        if ($user?->role === UserRole::ADMINISTRATOR && $user->office_id) {
+            $query->where('id', $user->office_id);
+        }
+        
+        return $query;
     }
 }
