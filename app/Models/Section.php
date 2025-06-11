@@ -18,6 +18,15 @@ class Section extends Model
         'office_id',
         'head_name',
         'designation',
+        'proposed_by',
+        'approved_by',
+        'proposed_at',
+        'approved_at',
+    ];
+
+    protected $casts = [
+        'proposed_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     public function office(): BelongsTo
@@ -38,5 +47,15 @@ class Section extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function proposedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'proposed_by');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

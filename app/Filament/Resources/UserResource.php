@@ -76,7 +76,11 @@ class UserResource extends Resource
                                 Forms\Components\TextInput::make('head_name'),
                                 Forms\Components\TextInput::make('designation'),
                             ])
-                            ->createOptionUsing(fn (array $data): Office => Office::create($data)),
+                            ->createOptionUsing(function (array $data): Office {
+                                $data['proposed_by'] = Auth::id();
+                                $data['proposed_at'] = now();
+                                return Office::create($data);
+                            }),
 
                         Forms\Components\Select::make('section_id')
                             ->label('Section')
@@ -110,7 +114,11 @@ class UserResource extends Resource
                                     ->required()
                                     ->maxLength(255),
                             ])
-                            ->createOptionUsing(fn (array $data): Section => Section::create($data)),
+                            ->createOptionUsing(function (array $data): Section {
+                                $data['proposed_by'] = Auth::id();
+                                $data['proposed_at'] = now();
+                                return Section::create($data);
+                            }),
                     ]),
             ]);
     }

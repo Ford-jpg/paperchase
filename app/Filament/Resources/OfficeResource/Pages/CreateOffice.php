@@ -4,10 +4,19 @@ namespace App\Filament\Resources\OfficeResource\Pages;
 
 use App\Filament\Resources\OfficeResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Auth;
 
 class CreateOffice extends CreateRecord
 {
     protected static string $resource = OfficeResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['proposed_by'] = Auth::id();
+        $data['proposed_at'] = now();
+        
+        return $data;
+    }
 
     protected function getRedirectUrl(): string
     {

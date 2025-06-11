@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('head_name')->nullable();
             $table->string('designation')->nullable();
+            $table->ulid('proposed_by')->required();
+            $table->ulid('approved_by')->required();
+            $table->timestamp('proposed_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
