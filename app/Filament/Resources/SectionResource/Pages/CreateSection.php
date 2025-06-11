@@ -17,6 +17,12 @@ class CreateSection extends CreateRecord
         $data['proposed_by'] = Auth::id();
         $data['proposed_at'] = now();
         
+        // If user is ROOT, auto-approve
+        if (Auth::user()?->role === \App\Enums\UserRole::ROOT) {
+            $data['approved_by'] = Auth::id();
+            $data['approved_at'] = now();
+        }
+        
         return $data;
     }
 

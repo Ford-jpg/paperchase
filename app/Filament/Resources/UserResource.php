@@ -79,6 +79,13 @@ class UserResource extends Resource
                             ->createOptionUsing(function (array $data): Office {
                                 $data['proposed_by'] = Auth::id();
                                 $data['proposed_at'] = now();
+                                
+                                // If user is ROOT, auto-approve
+                                if (Auth::user()?->role === UserRole::ROOT) {
+                                    $data['approved_by'] = Auth::id();
+                                    $data['approved_at'] = now();
+                                }
+                                
                                 return Office::create($data);
                             }),
 
@@ -117,6 +124,13 @@ class UserResource extends Resource
                             ->createOptionUsing(function (array $data): Section {
                                 $data['proposed_by'] = Auth::id();
                                 $data['proposed_at'] = now();
+                                
+                                // If user is ROOT, auto-approve
+                                if (Auth::user()?->role === UserRole::ROOT) {
+                                    $data['approved_by'] = Auth::id();
+                                    $data['approved_at'] = now();
+                                }
+                                
                                 return Section::create($data);
                             }),
                     ]),
