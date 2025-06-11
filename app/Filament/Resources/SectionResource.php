@@ -14,6 +14,7 @@ use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class SectionResource extends Resource
@@ -54,6 +55,33 @@ class SectionResource extends Resource
                 Tables\Columns\TextColumn::make('office.name')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('proposed_by.name')
+                    ->label('Proposed By')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('proposed_at')
+                    ->label('Proposed At')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('approved_by.name')
+                    ->label('Approved By')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Pending'),
+                Tables\Columns\TextColumn::make('approved_at')
+                    ->label('Approved At')
+                    ->dateTime()
+                    ->sortable()
+                    ->placeholder('Pending'),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->getStateUsing(fn (Section $record) => $record->approved_at ? 'Approved' : 'Pending')
+                    ->color(fn (string $state): string => match ($state) {
+                        'Approved' => 'success',
+                        'Pending' => 'warning',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('head_name')
                     ->sortable()
                     ->searchable(),
@@ -63,11 +91,73 @@ class SectionResource extends Resource
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make('trashed'),
+                Tables\Filters\TernaryFilter::make('approved')
+                    ->label('Status')
+                    ->trueLabel('Approved')
+                    ->falseLabel('Pending')
+                    ->queries(
+                        true: fn ($query) => $query->whereNotNull('approved_at'),
+                        false: fn ($query) => $query->whereNull('approved_at'),
+                    ),
             ])
             ->actions([
                 ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-            ]);
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (Section $record): bool => 
+                        Auth::user()?->role === UserRole::ROOT && 
+                        is_null($record->approved_at)
+                    )
+                    ->action(function (Section $record) {
+                        $record->update([
+                            'approved_by' => Auth::id(),
+                            'approved_at' => now(),
+                        ]);
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Section approved successfully.')
+                            ->success()
+                            ->send();
+                    }),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->role === UserRole::ROOT),
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->visible(fn () => Auth::user()?->role === UserRole::ROOT),
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->visible(fn () => Auth::user()?->role === UserRole::ROOT),
+                    Tables\Actions\BulkAction::make('approve')
+                        ->label('Approve Selected')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->visible(fn () => Auth::user()?->role === UserRole::ROOT)
+                        ->action(function (Collection $records) {
+                            $approvedCount = 0;
+                            foreach ($records as $record) {
+                                if (is_null($record->approved_at)) {
+                                    $record->update([
+                                        'approved_by' => Auth::id(),
+                                        'approved_at' => now(),
+                                    ]);
+                                    $approvedCount++;
+                                }
+                            }
+                            
+                            \Filament\Notifications\Notification::make()
+                                ->title("$approvedCount section(s) approved successfully.")
+                                ->success()
+                                ->send();
+                        }),
+                ]),
+            ])
+            ->defaultSort('proposed_at', 'desc');
     }
 
     public static function getRelations(): array
@@ -89,9 +179,19 @@ class SectionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
+            ->with(['office', 'proposedBy', 'approvedBy'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        $user = Auth::user();
+        
+        // If user is an Administrator, only show sections in their office
+        if ($user?->role === UserRole::ADMINISTRATOR && $user->office_id) {
+            $query->where('office_id', $user->office_id);
+        }
+        
+        return $query;
     }
 }
