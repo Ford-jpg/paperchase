@@ -192,14 +192,6 @@ class UserResource extends Resource
                         true: fn ($query) => $query->whereNull('deactivated_at'),
                         false: fn ($query) => $query->whereNotNull('deactivated_at'),
                     ),
-                Tables\Filters\TernaryFilter::make('approved_at')
-                    ->label('Approved')
-                    ->trueLabel('Approved')
-                    ->falseLabel('Pending')
-                    ->queries(
-                        true: fn ($query) => $query->whereNotNull('approved_at'),
-                        false: fn ($query) => $query->whereNull('approved_at'),
-                    ),
                 Tables\Filters\TrashedFilter::make('trashed')
                     ->label('Trashed'),
             ])
