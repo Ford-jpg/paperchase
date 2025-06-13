@@ -116,8 +116,7 @@ class Registration extends Register
                                 ->extraAlpineAttributes(['@keyup.enter' => $next]),
                             $this->getOfficeFormComponent()
                                 ->extraAttributes(['onkeydown' => "return event.key != 'Enter';"])
-                                ->extraAlpineAttributes(['@keyup.enter' => $next])
-                                ->required(),
+                                ->extraAlpineAttributes(['@keyup.enter' => $next]),
                             $this->getSectionFormComponent()
                                 ->extraAttributes(['onkeydown' => "return event.key != 'Enter';"])
                                 ->extraAlpineAttributes(['@keyup.enter' => $next]),
